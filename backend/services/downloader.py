@@ -312,8 +312,8 @@ def _download_worker(
         "progress_hooks": [progress_hook],
         "postprocessor_hooks": [postprocessor_hook],
         "postprocessors": postprocessors,
-        "quiet": True,
-        "no_warnings": True,
+        "quiet": False,
+        "no_warnings": False,
         "continuedl": True,  # Support resume
         "noprogress": True,
         # FFmpeg location

@@ -77,11 +77,51 @@ class Settings(BaseSettings):
                 if "\\t" in content:
                     content = content.replace("\\t", "\t")
 
-                # Write/overwrite only if the file doesn't exist or is empty
-                if not cookie_path.exists() or cookie_path.stat().st_size == 0:
+                # Sanitize lines: convert space-separated values back to tabs (common issue when copy-pasting to Render dashboard)
+                lines = content.splitlines()
+                sanitized_lines = []
+                for line in lines:
+                    stripped = line.strip()
+                    if not stripped or stripped.startswith("#"):
+                        sanitized_lines.append(line)
+                        continue
+                    if "\t" in stripped:
+                        sanitized_lines.append(stripped)
+                        continue
+                    parts = stripped.split()
+                    if len(parts) >= 7:
+                        domain = parts[0]
+                        tailmatch = parts[1]
+                        path = parts[2]
+                        secure = parts[3]
+                        expires = parts[4]
+                        name = parts[5]
+                        value = " ".join(parts[6:])
+                        if tailmatch.upper() in ("TRUE", "FALSE") and secure.upper() in ("TRUE", "FALSE") and expires.isdigit():
+                            sanitized_lines.append(f"{domain}\t{tailmatch.upper()}\t{path}\t{secure.upper()}\t{expires}\t{name}\t{value}")
+                        else:
+                            sanitized_lines.append(stripped)
+                    else:
+                        sanitized_lines.append(stripped)
+
+                sanitized_content = "\n".join(sanitized_lines)
+                if not sanitized_content.startswith("# Netscape HTTP Cookie File"):
+                    sanitized_content = "# Netscape HTTP Cookie File\n" + sanitized_content
+
+                # Write/overwrite only if the file doesn't exist, is empty, or the content has changed
+                should_write = True
+                if cookie_path.exists():
+                    try:
+                        existing = cookie_path.read_text(encoding="utf-8")
+                        if existing == sanitized_content:
+                            should_write = False
+                    except Exception:
+                        pass
+
+                if should_write:
                     cookie_path.parent.mkdir(parents=True, exist_ok=True)
-                    cookie_path.write_text(content, encoding="utf-8")
-                    logger.info(f"Successfully wrote cookies from environment variable to {cookie_path}")
+                    cookie_path.write_text(sanitized_content, encoding="utf-8")
+                    logger.info(f"Successfully wrote sanitized cookies to {cookie_path}")
                 return str(cookie_path)
             except Exception as e:
                 logger.error(f"Failed to write cookie file to {cookie_path}: {e}")

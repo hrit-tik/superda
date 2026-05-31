@@ -125,8 +125,8 @@ async def analyze_url(url: str) -> VideoMetadata:
     validated_url = validate_url(url)
 
     ydl_opts = {
-        "quiet": True,
-        "no_warnings": True,
+        "quiet": False,
+        "no_warnings": False,
         "skip_download": True,
         # Don't write anything to disk
         "writeinfojson": False,
