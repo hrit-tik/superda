@@ -40,6 +40,11 @@ async def lifespan(app: FastAPI):
     loop = asyncio.get_running_loop()
     set_event_loop(loop)
 
+    # Write cookie file from environment variable if provided
+    cookie_file = settings.resolved_cookie_file
+    if cookie_file:
+        logger.info(f"   Using cookies file: {cookie_file}")
+
     # Start periodic file cleanup
     cleanup_task = asyncio.create_task(periodic_cleanup())
 

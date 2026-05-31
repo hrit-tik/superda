@@ -134,8 +134,9 @@ async def analyze_url(url: str) -> VideoMetadata:
         "extract_flat": False,
     }
 
-    if settings.cookie_file:
-        ydl_opts["cookiefile"] = settings.cookie_file
+    cookie_file = settings.resolved_cookie_file
+    if cookie_file:
+        ydl_opts["cookiefile"] = cookie_file
     elif settings.cookies_from_browser:
         ydl_opts["cookiesfrombrowser"] = (settings.cookies_from_browser,)
 

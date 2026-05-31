@@ -145,6 +145,17 @@ Full interactive docs at [http://localhost:8000/api/docs](http://localhost:8000/
 | `RATE_LIMIT_WINDOW_SECONDS` | `60` | Rate limit window |
 | `CORS_ORIGINS` | `http://localhost:3000` | Allowed CORS origins |
 | `FFMPEG_PATH` | `ffmpeg` | Path to FFmpeg binary |
+| `COOKIE_FILE` | `None` | Path to a Netscape format cookie file |
+| `COOKIE_CONTENT` | `None` | Raw text contents of a Netscape format cookie file (useful for cloud deployments like Vercel/Render where file systems are read-only) |
+
+### 🍪 Bypassing YouTube "Sign in to confirm you're not a bot" Blocker
+If you host Superda on cloud services (like Vercel, Render, Railway, AWS, etc.), YouTube may flag the server IP address as a bot. To resolve this:
+1. Log in to YouTube in your web browser.
+2. Export your cookies in **Netscape** format using a browser extension (e.g. "Get cookies.txt LOCALLY").
+3. Paste the entire contents of the exported file into the `COOKIE_CONTENT` environment variable in your deployment dashboard.
+4. Alternatively, if hosting locally or in a container with a persistent volume, set `COOKIE_FILE` to the path of your exported `cookies.txt`.
+
+*Note: Clean-up and normalization logic is included to support copy-pasting multi-line values into environment variables containing escaped newlines (`\n`) or tabs (`\t`).*
 
 ## 🔒 Security
 

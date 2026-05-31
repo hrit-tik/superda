@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # --- Cookies ---
     cookies_from_browser: str | None = None
     cookie_file: str | None = None
+    cookie_content: str | None = None
 
     # --- Concurrency & Limits ---
     max_concurrent_downloads: int = 3
@@ -46,6 +47,46 @@ class Settings(BaseSettings):
         import shutil
         resolved = shutil.which(self.ffmpeg_path)
         return resolved or self.ffmpeg_path
+
+    @property
+    def resolved_cookie_file(self) -> str | None:
+        """Resolve the path to the cookies file, writing cookie_content to a temp file if provided."""
+        if self.cookie_file:
+            return self.cookie_file
+
+        if self.cookie_content:
+            import tempfile
+            from pathlib import Path
+            import logging
+
+            logger = logging.getLogger("superda.config")
+
+            # Use a safe path in the system temporary directory or downloads directory
+            try:
+                temp_dir = Path(tempfile.gettempdir())
+                cookie_path = temp_dir / "superda_cookies.txt"
+            except Exception:
+                # Fallback to download path if temp dir lookup fails
+                cookie_path = self.download_path / "superda_cookies.txt"
+
+            try:
+                # Clean and format cookie content (handles escaped newlines/tabs from environment copy-pastes)
+                content = self.cookie_content.strip()
+                if "\\n" in content:
+                    content = content.replace("\\n", "\n")
+                if "\\t" in content:
+                    content = content.replace("\\t", "\t")
+
+                # Write/overwrite only if the file doesn't exist or is empty
+                if not cookie_path.exists() or cookie_path.stat().st_size == 0:
+                    cookie_path.parent.mkdir(parents=True, exist_ok=True)
+                    cookie_path.write_text(content, encoding="utf-8")
+                    logger.info(f"Successfully wrote cookies from environment variable to {cookie_path}")
+                return str(cookie_path)
+            except Exception as e:
+                logger.error(f"Failed to write cookie file to {cookie_path}: {e}")
+
+        return None
 
     model_config = {
         "env_file": os.path.join(os.path.dirname(__file__), ".env"),

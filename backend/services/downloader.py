@@ -322,8 +322,9 @@ def _download_worker(
         "merge_output_format": "mp4" if request.video_container == VideoContainer.ORIGINAL else request.video_container.value,
     }
 
-    if settings.cookie_file:
-        ydl_opts["cookiefile"] = settings.cookie_file
+    cookie_file = settings.resolved_cookie_file
+    if cookie_file:
+        ydl_opts["cookiefile"] = cookie_file
     elif settings.cookies_from_browser:
         ydl_opts["cookiesfrombrowser"] = (settings.cookies_from_browser,)
 
