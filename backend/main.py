@@ -40,6 +40,13 @@ async def lifespan(app: FastAPI):
     loop = asyncio.get_running_loop()
     set_event_loop(loop)
 
+    # Log yt-dlp version
+    try:
+        import yt_dlp.version
+        logger.info(f"   yt-dlp version: {yt_dlp.version.__version__}")
+    except Exception as e:
+        logger.warning(f"   Could not determine yt-dlp version: {e}")
+
     # Write cookie file from environment variable if provided
     cookie_file = settings.resolved_cookie_file
     if cookie_file:
